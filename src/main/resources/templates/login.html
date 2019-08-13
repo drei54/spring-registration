@@ -1,0 +1,128 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!-- start head -->
+<div th:replace="fragments/header :: header"></div>
+<!-- end head -->
+<body>
+<div class="container">
+<br/>
+<div class="row row justify-content-center">
+	<div class="col-md-6">
+		<!-- start login -->
+		<div class="card silver">
+		  <div class="card-body">
+		  	<h2>Login</h2>
+		    <form name="form-registration" id="form-registration" >
+			  <div class="form-group" id="form-group-email">
+			    <input type="text" class="form-control" name="email" id="email" placeholder="Email" maxlength="64">
+			  	<p class="help-block" id="emailError"></p>
+			  </div>
+			  <div class="form-group" id="form-group-password">
+			    <input type="text" class="form-control" name="password" id="password" placeholder="Password" maxlength="64">
+			  	<p class="help-block" id="passwordError"></p>
+			  </div>
+			  <button type="button" class="btn btn-primary btn-purple" id="btn-submit">Login</button>
+			</form>
+		  </div>
+		</div>
+		<!-- end login -->
+		<br/>
+		<!-- start head -->
+		<div th:replace="fragments/footer :: footer"></div>
+		<!-- end head -->
+	</div>
+</div>
+
+</div>
+
+</body>
+</html>
+<script th:inline="javascript">
+/*<![CDATA[*/
+$(document).ready(function(){
+
+	var msgErrEmpty = "is required";
+	var fieldDescs = {'email':'Email','password':'Password'};
+	$('#btn-submit').click(function(){
+		var isError = false;
+		var fields = ['email', 'password'];
+		$.each(fields, function( index, field ) {
+			var isErr = validateEmpty(field);
+			if(isErr){
+				isError = isErr;
+			}
+		});
+		
+		if(!isError){
+			submitRegister();	
+		}
+	});
+	
+	function validateEmpty(field){
+		var isError = false;
+		if($('#'+field).val() == ''){
+			setError(field, msgErrEmpty);
+			isError = true;
+		}else{
+			removeError(field);
+		}
+		return isError;
+	}
+
+	function validateEmail(field) {
+		var isError = false;
+	  	var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+	  	var emailVal = $('#'+field).val();
+	  	if(emailVal != ''){
+			if(!emailReg.test(emailVal)){
+				setError(field, msgErrInvalidEmail);
+				isError = true;
+			}else{
+				removeError(field);
+			}
+	  	}
+		return isError;
+	}
+
+	function submitRegister(){
+		var url = location.protocol + '//' + location.host+'/login';
+		var formData = JSON.stringify({
+			email: $('#email').val(),
+			password: $('#password').val()
+		});
+		console.log(formData);
+		$.ajax({
+		    url: url,
+		    dataType: 'json',
+		    type: 'post',
+		    contentType: 'application/json',
+		    data: formData,
+		    processData: false,
+		    success: function( data){
+		       console.log(data);
+		    },
+		    error: function(errorThrown ){
+		        console.log( errorThrown );
+		    }
+		});
+	}
+	
+	$('input').bind("input",function(e) {
+		validateEmpty($(this).attr('id'));
+	});
+	
+	function setError(field, msg){
+		$('#form-group-'+field).addClass("has-error");
+		$('#'+field+'Error').text(fieldDescs[field]+" "+msg);
+	}
+	
+	function removeError(field){
+		$('#form-group-'+field).removeClass("has-error");
+		$('#'+field+'Error').text("");
+	}
+});		
+/*]]>*/
+</script>
+
+<script th:inline="javascript">
+
+ 

@@ -1,0 +1,293 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!-- start head -->
+<div th:replace="fragments/header :: header"></div>
+<!-- end head -->
+<body>
+<div class="container">
+<br/>
+<div class="row row justify-content-center">
+	<div class="col-md-6">
+		<!-- start registration -->
+		<div class="card silver">
+		  <div class="card-body">
+		  	<h2 class="reg">Registration</h2>
+		    <form name="form-registration" id="form-registration" >
+			  <div class="form-group" id="form-group-mobileNumber">
+			    <input type="text" class="form-control in-numeric reg" name="mobileNumber" id="mobileNumber" placeholder="Mobile number" maxlength="15">
+			    <p class="help-block" id="mobileNumberError"></p>
+			  </div>
+			  <div class="form-group" id="form-group-firstName">
+			    <input type="text" class="form-control reg" name="firstName" id="firstName" placeholder="First name" maxlength="64">
+			  	<p class="help-block" id="firstNameError"></p>
+			  </div>
+			  <div class="form-group" id="form-group-lastName">
+			    <input type="text" class="form-control reg" name="lastName" id="lastName" placeholder="Last name" maxlength="64">
+			  	<p class="help-block" id="lastNameError"></p>
+			  </div>
+			  <div class="form-row">
+				  <div class="form-group col-md-3">
+				    <label for="month">Date of Birth</label>
+				    <select class="form-control reg" id="month" name="month">
+				      <option value="">Month</option>
+				      <option th:each="data, iter : ${months}" th:value="${data}" th:text="${data}">Mar</option>
+				    </select>
+				  </div>
+				  <div class="form-group col-md-3">
+				  	<label for="month">&nbsp;</label>
+				    <select class="form-control reg" id="date" name="date" >
+				      <option value="">Date</option>
+				      <option th:each="data, iter : ${dates}" th:value="${data}" th:text="${data}">1</option>
+				    </select>
+				  </div>
+				  <div class="form-group col-md-3">
+				  	<label for="month">&nbsp;</label>
+				    <select class="form-control reg" id="year" name="year">
+				      <option value="">Year</option>
+				      <option th:each="data, iter : ${years}" th:value="${data}" th:text="${data}">2011</option>
+				    </select>
+				  </div>
+			  </div>
+			  <div class="form-group">
+			    <div class="custom-control custom-radio custom-control-inline">
+				  <input type="radio" id="male" name="gender" class="custom-control-input reg" value="M">
+				  <label class="custom-control-label" for="male">Male</label>
+				</div>
+				<div class="custom-control custom-radio custom-control-inline">
+				  <input type="radio" id="female" name="gender" class="custom-control-input reg" value="F">
+				  <label class="custom-control-label" for="female">Female</label>
+				</div>
+			  </div>
+			  <div class="form-group" id="form-group-email">
+			    <input type="text" class="form-control reg" name="email" id="email" placeholder="Email" maxlength="64">
+			  	<p class="help-block" id="emailError"></p>
+			  </div>
+			  <button type="button" class="btn btn-primary btn-purple reg" id="btn-submit">Registration</button>
+			</form>
+		  </div>
+		</div>
+		<!-- end registration -->
+		<br/>
+		<!-- start login -->
+		<div class="card silver" id="login-div" style="display:none;">
+		  <div class="card-body">
+		    <form>
+			  <a href="login" class="btn btn-primary btn-purple" id="btn-login">Login</a>
+			</form>
+		  </div>
+		</div>
+		<!-- end login -->
+		<br/>
+		<!-- start head -->
+		<div th:replace="fragments/footer :: footer"></div>
+		<!-- end head -->
+				
+	</div>
+</div>
+</div>
+
+</body>
+</html>
+<script th:inline="javascript">
+/*<![CDATA[*/
+$(document).ready(function(){
+
+	var msgErrEmpty = "is required";
+	var msgErrInvalidEmail = "invalid";
+	var msgErrAlreadyExists = "already exist";
+	var msgErrIDNMobileNumber = "not indonesian phone number (+62..)";
+	var fieldDescs = {'mobileNumber':'Mobile Number','firstName':'First Name','lastName':'Last Name','email':'Email'};
+	$('#btn-submit').click(function(){
+		var isError = false;
+		var fields = ['mobileNumber','firstName','lastName','email'];
+		$.each(fields, function( index, field ) {
+			var isErr = validateEmpty(field);
+			if(isErr){
+				isError = isErr;
+			}
+		});
+		
+		//mobileNumber
+		if(!isError){
+			var isErr = validateMobileNumber('mobileNumber');
+			if(isErr){
+				isError = isErr;
+			}
+		}
+
+		//email
+		var isErr = validateEmail('email');
+		if(isErr){
+			isError = isErr;
+		}
+			
+		if(!isError){
+			submitRegister();	
+		}
+	});
+	
+	function validateEmpty(field){
+		var isError = false;
+		if($('#'+field).val() == ''){
+			setError(field, msgErrEmpty);
+			isError = true;
+		}else{
+			removeError(field);
+		}
+		return isError;
+	}
+
+	function validateEmail(field) {
+		var isError = false;
+	  	var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+	  	var emailVal = $('#'+field).val();
+	  	if(emailVal != ''){
+			if(!emailReg.test(emailVal)){
+				setError(field, msgErrInvalidEmail);
+				isError = true;
+			}else{
+				removeError(field);
+			}
+	  	}
+	  	if(isError == false){
+	  		validateEmailExist(field);
+	  	}
+		return isError;
+	}
+
+	function validateEmailExist(field){
+		var isError = false;
+		var emailVal = $('#'+field).val();
+		if(emailVal.trim() != ''){
+			var url = location.protocol + '//' + location.host+'/registration/check-email?email='+emailVal;
+			console.log(url);
+			$.ajax(
+				url,{
+				async:false,
+				success: function(res) {
+			    	console.log(res);
+			 		if(res.code != 200){
+						setError(field,msgErrAlreadyExists);
+						isError = true;
+					}else{
+					
+						$('#form-group-'+field).removeClass("has-error");
+						$('#'+field+'Error').text("");
+					}
+		
+			    },
+			    error: function() {
+			    	console.log('error');
+			    }
+		   	});
+		}
+		return isError;
+	}
+	
+	function validateMobileNumber(field) {
+		var isError = false;
+	  	var mobileNumberVal = $('#'+field).val();
+	  	console.log(mobileNumberVal.startsWith("+62"));
+	  	if(mobileNumberVal.startsWith("+62") != true){
+			setError(field, msgErrIDNMobileNumber);
+			isError = true;
+		}else{
+			removeError(field);
+	  	}
+	  	if(isError == false){
+	  		validateMobileNumberExits(field);
+	  	}
+		return isError;
+	}
+	
+	function validateMobileNumberExits(field){
+		var isError = false;
+		var mobileNumberVal = $('#'+field).val();
+		if(mobileNumberVal.trim() != ''){
+			var url = location.protocol + '//' + location.host+'/registration/check-number?mobileNumber=' +mobileNumberVal;
+			console.log(url);
+			$.ajax(
+				url,{
+				async:false,
+				success: function(res) {
+			    	console.log(res);
+			 		if(res.code != 200){
+			 			setError(field,msgErrAlreadyExists);
+						isError = true;
+					}else{
+						$('#form-group-'+field).removeClass("has-error");
+						$('#'+field+'Error').text("");
+					}
+		
+			    },
+			    error: function() {
+			    	console.log('error');
+			    }
+		   	});
+			}
+		return isError;
+	}
+
+	function submitRegister(){
+		var url = location.protocol + '//' + location.host+'/registration';
+		var birthOfDate = null;
+		if($('#date').val() != "" && $('#month').val() != ""  && $('#year').val() != ""){
+			birthOfDate = $('#date').val()+"-"+$('#month').val()+"-"+$('#year').val();
+		}
+		var formData = JSON.stringify({ 
+			mobileNumber: $('#mobileNumber').val(),
+			firstName: $('#firstName').val(),
+			lastName: $('#lastName').val(),
+			date: $('#date').val(),
+			month: $('#month').val(),
+			year: $('#year').val(),			
+			gender: $("input[name='gender']:checked").val(),
+			email: $('#email').val()
+		});
+		console.log(formData);
+		$.ajax({
+		    url: url,
+		    dataType: 'json',
+		    type: 'post',
+		    contentType: 'application/json',
+		    data: formData,
+		    processData: false,
+		    success: function( data){
+		       console.log(data);
+		       if(data.code == 200){
+		       		$('#login-div').show();
+		       		$('.reg').attr('disabled','disabled');
+		       		$('.reg').addClass('fsilver');
+		       		$('.reg').val('');
+		       }
+		    },
+		    error: function(errorThrown ){
+		        console.log( errorThrown );
+		    }
+		});
+	}
+
+	$('.in-numeric').bind("input",function(e) {
+		var self = $(this);
+	   	self.val(self.val().replace(/[^0-9 +]/g, ''));
+	}); 
+
+	$('input').bind("input",function(e) {
+		validateEmpty($(this).attr('id'));
+	});
+	
+	function setError(field, msg){
+		$('#form-group-'+field).addClass("has-error");
+		$('#'+field+'Error').text(fieldDescs[field]+" "+msg);
+	}
+	
+	function removeError(field){
+		$('#form-group-'+field).removeClass("has-error");
+		$('#'+field+'Error').text("");
+	}
+});		
+/*]]>*/
+</script>
+
+<script th:inline="javascript">
+
+ 
